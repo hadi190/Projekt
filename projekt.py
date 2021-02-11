@@ -4,7 +4,53 @@ import time
 import re
 
 from pymongo import MongoClient
-client = MongoClient()
+client = MongoClient('mongodb://localhost:27017')
+UserDB = client.Users.users
+Chatt = client.Chatt
+
+
+första = {
+    "Från" : "Ditt användarnamn",
+    "Historik": "Inget"
+}
+
+Chatt.Public.insert_one(första)
+
+HEIGHT = 700
+WIDTH = 1100
+
+allmänID = "gnfsgngs"
+
+root = tk.Tk()
+canvas = tk.Canvas(root, height = HEIGHT, width = WIDTH)
+canvas.pack()
+
+
+def firstPage():
+    frame.place_forget()
+    frontframe.place(relx=0,rely=0,relwidth=1,relheight=1)
+    sideframe.place(relwidth=0.17, relheight=1)
+    chatView.place(relwidth=0.83, relheight=0.95, relx=0.17)
+    chatText.place(relwidth=0.83,relheight=0.05, rely=0.95, relx=0.17)
+    allmänt.place(relwidth=1,relheight=0.08)
+
+
+def hemsida():
+    for item in home:
+        item.destroy()
+    for stuff in nyAnv:
+        stuff.destroy()
+
+    firstPage()
+
+def öppnaChatt():
+    for linjer in Chatt.Public:
+
+        text = linjer.find_one()
+
+        linjer = tk.Label(chatText, bg="#F0F0F0", text=text)
+        
+        linjer.place(relwidth=1,relheight=1)
 
 def resize(e):
 
@@ -22,27 +68,44 @@ def resize(e):
     SkapalösLabel.config(font=("Courier", int(labelsize)))
     SkapalösLabeltvå.config(font=("Courier", int(labelsize)))
     skapafull.config(font=("Courier", int(buttonsize)))
+    error.config(font=("Courier", int(buttonsize)))
+
+def loggainKonto():
+    login_namn = UserDB.find_one({"namn": användarnamn.get()})
+    #insert code for checking username and pass on database
+    hemsida()
 
 def slutför():
-    regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]') 
+    regex = re.compile('[@_!#$%^&*()<>?/|}{~:]') 
 
     if(regex.search(skapaNamn.get()) == None):
         if len(skapaNamn.get()) > 4:
             if len(skapaLösenord.get()) > 4:
                 if skapaLösenord.get() == skapaLösenordtvå.get():
-                    print("grattis det skulle funka!")
-
+                    if UserDB.find({"namn": skapaNamn.get()}).count() <= 0:
+                        user_data = {
+                            "namn" : skapaNamn.get(),
+                            "lösenord" : skapaLösenord.get()
+                        }   
+                        UserDB.insert_one(user_data)
+                        hemsida()
+                    else :
+                        error.config(text="Det finns redan en användare med det namnet!")
+                else :
+                    error.config(text="Lösenorden stämmer inte!")
+            else :
+                error.config(text="Lösenordet måste vara längre än 4 karaktärer!")
+        else :
+            error.config(text="Namnet måste vara längre än 4 karaktärer!")
     else : 
-        print("skulle inte funka :(")
+        error.config(text="Du måste använda bokstäver!")
 
 def skapaSÄ():
-    anvLabel.place_forget()
-    användarnamn.place_forget()
-    lösLabel.place_forget()
-    lösenord.place_forget()
-    loggaIn.place_forget()
-    skapaLabel.place_forget()
-    skapa.place_forget()
+
+    for stuff in home:
+        stuff.place_forget()
+    
+    label.place(rely=0.01, relx=0.1, relwidth=0.8, relheight=0.3)
     tillbaka.place(relwidth=0.1,relheight=0.07)
     skapaNamnLabel.place(rely=0.25, relx=0.25, relwidth=0.5,relheight=0.05)
     skapaNamn.place(rely=0.3, relx=0.25, relwidth=0.5, relheight=0.05)
@@ -50,18 +113,12 @@ def skapaSÄ():
     skapaLösenord.place(rely=0.45, relx=0.25, relwidth=0.5, relheight=0.05)
     SkapalösLabeltvå.place(rely=0.56, relx=0.25, relwidth=0.5, relheight = 0.04)
     skapaLösenordtvå.place(rely=0.61, relx=0.25, relwidth=0.5, relheight=0.05)
+    error.place(rely=0.664, relx=0.01, relwidth=1, relheight=0.03)
     skapafull.place(rely=0.72, relx=0.35, relwidth=0.3, relheight = 0.1)
 
 def returnHome():
-    skapaNamnLabel.place_forget()
-    skapaNamn.place_forget()
-    tillbaka.place_forget()
-    SkapalösLabel.place_forget()
-    skapaLösenord.place_forget()
-    SkapalösLabeltvå.place_forget()
-    skapaLösenordtvå.place_forget()
-    skapafull.place_forget()
-    time.sleep(0.1)
+    for item in nyAnv:
+        item.place_forget()
 
     label.place(rely=0.01, relx=0.1, relwidth=0.8, relheight=0.3)
     anvLabel.place(rely=0.25, relx=0.25, relwidth=0.5,relheight=0.05)
@@ -72,17 +129,19 @@ def returnHome():
     skapaLabel.place(rely=0.65, relx=0.35, relwidth=0.3, relheight = 0.04)
     skapa.place(rely=0.72, relx=0.35, relwidth=0.3, relheight = 0.1)
 
-HEIGHT = 700
-WIDTH = 1100
-
-root = tk.Tk()
-canvas = tk.Canvas(root, height = HEIGHT, width = WIDTH)
-canvas.pack()
 
 frame = tk.Frame(root, bg="#b8d6de")
 frame.place(relx=0.3,rely=0.05,relwidth=0.4,relheight=0.85)
 
-tillbaka = tk.Button(frame, text="<--", command=returnHome)
+frontframe = tk.Frame(root, bg="#FF5733")
+sideframe =tk.Frame(frontframe, bg="#F0F0F0", bd=1)
+chatText = tk.Entry(frontframe, bg="#F0F0F0")
+chatView = tk.Frame(frontframe, bg="#b8d6de")
+
+allmänt = tk.Button(sideframe, bg="#F0F0F0", text="Den allmänna chatten", command=öppnaChatt)
+allmänt.config(font=("Courier", 10))
+
+tillbaka = tk.Button(root, text="<--", command=returnHome)
 tillbaka.config(font=("Courier", 20))
 
 label = tk.Label(frame, text="The Room", bg="#b8d6de")
@@ -104,7 +163,7 @@ lösenord = tk.Entry(frame)
 lösenord.config(show="*")
 lösenord.place(rely=0.45, relx=0.25, relwidth=0.5, relheight=0.05)
 
-loggaIn = tk.Button(frame, bg="white", text="Logga in")
+loggaIn = tk.Button(frame, bg="white", text="Logga in", command=loggainKonto)
 loggaIn.config(font=("Courier", 10))
 loggaIn.place(rely=0.53, relx=0.35, relwidth=0.3, relheight = 0.1)
 
@@ -135,6 +194,12 @@ skapaLösenordtvå.config(show="*")
 
 skapafull = tk.Button(frame, bg="white", text="Skapa användare", command=slutför)
 skapafull.config(font=("Courier", 10))
+
+error = tk.Label(frame, bg="#b8d6de", text="", fg="#c32340")
+error.config(font=("Courier", 15))
+
+home = (label, anvLabel, användarnamn, lösLabel, lösenord, loggaIn, skapaLabel, skapa)
+nyAnv = (tillbaka, skapaNamnLabel, skapaNamn, SkapalösLabel, skapaLösenord, SkapalösLabeltvå, skapaLösenordtvå, skapafull, error)
 
 
 root.bind("<Configure>", resize)
