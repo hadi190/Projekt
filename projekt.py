@@ -2,19 +2,13 @@ import tkinter as tk
 import pymongo
 import time
 import re
+import socket
+import threading
 
 from pymongo import MongoClient
 client = MongoClient('mongodb://localhost:27017')
 UserDB = client.Users.users
 Chatt = client.Chatt
-
-
-första = {
-    "Från" : "Ditt användarnamn",
-    "Historik": "Inget"
-}
-
-Chatt.Public.insert_one(första)
 
 HEIGHT = 700
 WIDTH = 1100
@@ -72,8 +66,15 @@ def resize(e):
 
 def loggainKonto():
     login_namn = UserDB.find_one({"namn": användarnamn.get()})
+
+    if login_namn.lösenord == lösenord.get():
+        print("Rätt!")
     #insert code for checking username and pass on database
     hemsida()
+
+
+AllText = Chatt.Public.find()
+
 
 def slutför():
     regex = re.compile('[@_!#$%^&*()<>?/|}{~:]') 
@@ -200,6 +201,17 @@ error.config(font=("Courier", 15))
 
 home = (label, anvLabel, användarnamn, lösLabel, lösenord, loggaIn, skapaLabel, skapa)
 nyAnv = (tillbaka, skapaNamnLabel, skapaNamn, SkapalösLabel, skapaLösenord, SkapalösLabeltvå, skapaLösenordtvå, skapafull, error)
+
+
+def skicka(nugget):
+    Chatt.Public.insert(nugget)
+
+
+
+chatText.bind("<Return>", skicka(chatText.get()))
+
+
+
 
 
 root.bind("<Configure>", resize)
